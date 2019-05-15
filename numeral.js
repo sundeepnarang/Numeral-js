@@ -10,7 +10,12 @@ var ExtendedNumber = function (val) {
     this._val = Number(val);
 };
 
-ExtendedNumber.prototype.multiply = function (x) {
+
+
+ExtendedNumber.prototype.divide = function (x) {
+    this._val /= x.valueOf();
+    return this;
+};ExtendedNumber.prototype.multiply = function (x) {
     this._val *= x.valueOf();
     return this;
 };
@@ -985,9 +990,16 @@ ExtendedNumber.prototype.valueOf =function () {
 
             var bigVal = new numeral.options.BigDecimalLib(parts[0]);
 
+            var bigTen = new numeral.options.BigDecimalLib('10');
+            var negPow = power<0;
+            var bigPower = negPow?-1*power: power;
+            var multiplier = bigTen.pow(bigPower);
+
+            var bigValue = negPow?bigVal.divide(multiplier):bigVal.multiply(multiplier);
+
             return {
                 value : numeral._.reduce([value, Math.pow(10, power)], cback, 1),
-                bigValue : bigVal.pow(power)
+                bigValue : bigValue
             } ;
         }
     });

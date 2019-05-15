@@ -42,7 +42,7 @@
 
             var bigVal = new numeral.options.BigDecimalLib(parts[0]);
 
-            var bigTen = new numeral.options.BigDecimalLib("10");
+            var bigTen = new numeral.options.BigDecimalLib('10');
             var negPow = power<0;
             var bigPower = negPow?-1*power: power;
             var multiplier = bigTen.pow(bigPower);
