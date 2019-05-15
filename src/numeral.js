@@ -29,14 +29,16 @@
             zeroFormat: null,
             nullFormat: null,
             defaultFormat: '0,0',
-            scalePercentBy100: true
+            scalePercentBy100: true,
+            BigDecimalLib : Number
         },
         options = {
             currentLocale: defaults.currentLocale,
             zeroFormat: defaults.zeroFormat,
             nullFormat: defaults.nullFormat,
             defaultFormat: defaults.defaultFormat,
-            scalePercentBy100: defaults.scalePercentBy100
+            scalePercentBy100: defaults.scalePercentBy100,
+            BigDecimalLib : defaults.BigDecimalLib
         };
 
 
@@ -49,6 +51,8 @@
         this._input = input;
 
         this._value = number;
+
+        this._bigValue = options.BigDecimalLib(input);
     }
 
     numeral = function(input) {
@@ -607,11 +611,15 @@
         value: function() {
             return this._value;
         },
+        bigValue: function() {
+            return this._bigValue;
+        },
         input: function() {
             return this._input;
         },
         set: function(value) {
             this._value = Number(value);
+            this._bigValue = options.BigDecimalLib(value);
 
             return this;
         },
