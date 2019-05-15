@@ -47,31 +47,36 @@
     ************************************/
 
     // Numeral prototype object
-    function Numeral(input, number) {
+    function Numeral(input, number, bigValue=null) {
         this._input = input;
 
         this._value = number;
 
-        this._bigValue = options.BigDecimalLib(input);
+        this._bigValue = bigValue;
     }
 
     numeral = function(input) {
         var value,
+            bigValue,
             kind,
             unformatFunction,
             regexp;
 
         if (numeral.isNumeral(input)) {
             value = input.value();
+            bigValue= input.bigValue();
         } else if (input === 0 || typeof input === 'undefined') {
             value = 0;
+            bigValue = options.BigDecimalLib(0);
         } else if (input === null || _.isNaN(input)) {
             value = null;
         } else if (typeof input === 'string') {
             if (options.zeroFormat && input === options.zeroFormat) {
                 value = 0;
+                bigValue = options.BigDecimalLib(0);
             } else if (options.nullFormat && input === options.nullFormat || !input.replace(/[^0-9]+/g, '').length) {
                 value = null;
+                bigValue = null;
             } else {
                 for (kind in formats) {
                     regexp = typeof formats[kind].regexps.unformat === 'function' ? formats[kind].regexps.unformat() : formats[kind].regexps.unformat;
@@ -85,13 +90,21 @@
 
                 unformatFunction = unformatFunction || numeral._.stringToNumber;
 
-                value = unformatFunction(input);
+                var unformatOutput = unformatFunction(input);
+                if(typeof unformatOutput==="object"){
+                    value = unformatOutput.value;
+                    bigValue = unformatOutput.bigValue;
+                }else {
+                    value = unformatOutput;
+                    bigValue = null;
+                }
             }
         } else {
             value = Number(input)|| null;
+            bigValue = options.BigDecimalLib(input)|| null;
         }
 
-        return new Numeral(input, value);
+        return new Numeral(input, value, bigValue);
     };
 
     // version number
@@ -275,13 +288,16 @@
                 },
                 abbreviation,
                 value,
+                bigValue,
                 i,
                 regexp;
 
             if (options.zeroFormat && string === options.zeroFormat) {
                 value = 0;
+                bigValue= options.BigDecimalLib(0);
             } else if (options.nullFormat && string === options.nullFormat || !string.replace(/[^0-9]+/g, '').length) {
                 value = null;
+                bigValue = null;
             } else {
                 value = 1;
 
@@ -304,10 +320,11 @@
                 // remove non numbers
                 string = string.replace(/[^0-9\.]+/g, '');
 
+                bigValue = options.BigDecimalLib(string).multiply(options.BigDecimalLib(""+value));
                 value *= Number(string);
             }
 
-            return value;
+            return {value, bigValue};
         },
         isNaN: function(value) {
             return typeof value === 'number' && isNaN(value);

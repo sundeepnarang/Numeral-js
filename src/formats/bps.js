@@ -41,7 +41,12 @@
                 return output;
             },
             unformat: function(string) {
-                return +(numeral._.stringToNumber(string) * 0.0001).toFixed(15);
+                var values = numeral._.stringToNumber(string);
+
+                return{
+                    value : +(values.value * 0.0001).toFixed(15),
+                    bigValue : values.bigValue.multiply(numeral.options.BigDecimalLib("0.0001"))
+                };
             }
         });
 }));

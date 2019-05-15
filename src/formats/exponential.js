@@ -40,7 +40,12 @@
                 return num;
             }
 
-            return numeral._.reduce([value, Math.pow(10, power)], cback, 1);
+            const bigVal = numeral.options.BigDecimalLib(parts[0]);
+
+            return {
+                value : numeral._.reduce([value, Math.pow(10, power)], cback, 1),
+                bigValue : bigVal.pow(power)
+            } ;
         }
     });
 }));

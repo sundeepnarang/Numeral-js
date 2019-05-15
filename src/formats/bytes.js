@@ -63,7 +63,7 @@
             return output + suffix;
         },
         unformat: function(string) {
-            var value = numeral._.stringToNumber(string),
+            let {value,bigValue} = numeral._.stringToNumber(string),
                 power,
                 bytesMultiplier;
 
@@ -85,7 +85,28 @@
                 value *= (bytesMultiplier || 1);
             }
 
-            return value;
+            if (bigValue) {
+                for (power = decimal.suffixes.length - 1; power >= 0; power--) {
+                    if (numeral._.includes(string, decimal.suffixes[power])) {
+                        bytesMultiplier = Math.pow(decimal.base, power);
+
+                        break;
+                    }
+
+                    if (numeral._.includes(string, binary.suffixes[power])) {
+                        bytesMultiplier = Math.pow(binary.base, power);
+
+                        break;
+                    }
+                }
+
+                if(!bytesMultiplier) bytesMultiplier = 1;
+
+                bigValue = bigValue.multiply(numeral.options.BigDecimalLib(""+bytesMultiplier));
+            }
+
+
+            return {value,bigValue};
         }
     });
 }));
