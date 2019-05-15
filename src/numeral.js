@@ -10,7 +10,12 @@ var ExtendedNumber = function (val) {
     this._val = Number(val);
 };
 
-ExtendedNumber.prototype.multiply = function (x) {
+
+
+ExtendedNumber.prototype.divide = function (x) {
+    this._val /= x.valueOf();
+    return this;
+};ExtendedNumber.prototype.multiply = function (x) {
     this._val *= x.valueOf();
     return this;
 };
