@@ -6,6 +6,31 @@
  * http://adamwdraper.github.com/Numeral-js/
  */
 
+var ExtendedNumber = function (val) {
+    this._val = Number(val);
+};
+
+ExtendedNumber.prototype.multiply = function (x) {
+    this._val *= x.valueOf();
+    return this;
+};
+
+ExtendedNumber.prototype.add = function (x) {
+    this._val += x.valueOf();
+    return this;
+};
+
+ExtendedNumber.prototype.pow = function (x) {
+    this._val= Math.pow(this._val, x.valueOf());
+    return this;
+};
+
+ExtendedNumber.prototype.valueOf =function () {
+    return this._val.valueOf();
+};
+
+
+
 (function (global, factory) {
     if (typeof define === 'function' && define.amd) {
         define(factory);
@@ -30,7 +55,7 @@
             nullFormat: null,
             defaultFormat: '0,0',
             scalePercentBy100: true,
-            BigDecimalLib : Number
+            BigDecimalLib : ExtendedNumber
         },
         options = {
             currentLocale: defaults.currentLocale,
@@ -47,7 +72,7 @@
     ************************************/
 
     // Numeral prototype object
-    function Numeral(input, number, bigValue=null) {
+    function Numeral(input, number, bigValue) {
         this._input = input;
 
         this._value = number;
@@ -67,13 +92,13 @@
             bigValue= input.bigValue();
         } else if (input === 0 || typeof input === 'undefined') {
             value = 0;
-            bigValue = options.BigDecimalLib(0);
+            bigValue = new options.BigDecimalLib(0);
         } else if (input === null || _.isNaN(input)) {
             value = null;
         } else if (typeof input === 'string') {
             if (options.zeroFormat && input === options.zeroFormat) {
                 value = 0;
-                bigValue = options.BigDecimalLib(0);
+                bigValue = new options.BigDecimalLib(0);
             } else if (options.nullFormat && input === options.nullFormat || !input.replace(/[^0-9]+/g, '').length) {
                 value = null;
                 bigValue = null;
@@ -91,7 +116,7 @@
                 unformatFunction = unformatFunction || numeral._.stringToNumber;
 
                 var unformatOutput = unformatFunction(input);
-                if(typeof unformatOutput==="object"){
+                if(typeof unformatOutput==='object'){
                     value = unformatOutput.value;
                     bigValue = unformatOutput.bigValue;
                 }else {
@@ -101,7 +126,7 @@
             }
         } else {
             value = Number(input)|| null;
-            bigValue = options.BigDecimalLib(input)|| null;
+            bigValue = new options.BigDecimalLib(input)|| null;
         }
 
         return new Numeral(input, value, bigValue);
@@ -294,7 +319,7 @@
 
             if (options.zeroFormat && string === options.zeroFormat) {
                 value = 0;
-                bigValue= options.BigDecimalLib(0);
+                bigValue= new options.BigDecimalLib(0);
             } else if (options.nullFormat && string === options.nullFormat || !string.replace(/[^0-9]+/g, '').length) {
                 value = null;
                 bigValue = null;
@@ -320,11 +345,11 @@
                 // remove non numbers
                 string = string.replace(/[^0-9\.]+/g, '');
 
-                bigValue = options.BigDecimalLib(string).multiply(options.BigDecimalLib(""+value));
+                bigValue = (new options.BigDecimalLib(string)).multiply(new options.BigDecimalLib(''+value));
                 value *= Number(string);
             }
 
-            return {value, bigValue};
+            return {value:value, bigValue:bigValue};
         },
         isNaN: function(value) {
             return typeof value === 'number' && isNaN(value);
@@ -636,7 +661,7 @@
         },
         set: function(value) {
             this._value = Number(value);
-            this._bigValue = options.BigDecimalLib(value);
+            this._bigValue = new options.BigDecimalLib(value);
 
             return this;
         },

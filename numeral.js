@@ -6,6 +6,31 @@
  * http://adamwdraper.github.com/Numeral-js/
  */
 
+var ExtendedNumber = function (val) {
+    this._val = Number(val);
+};
+
+ExtendedNumber.prototype.multiply = function (x) {
+    this._val *= x.valueOf();
+    return this;
+};
+
+ExtendedNumber.prototype.add = function (x) {
+    this._val += x.valueOf();
+    return this;
+};
+
+ExtendedNumber.prototype.pow = function (x) {
+    this._val= Math.pow(this._val, x.valueOf());
+    return this;
+};
+
+ExtendedNumber.prototype.valueOf =function () {
+    return this._val.valueOf();
+};
+
+
+
 (function (global, factory) {
     if (typeof define === 'function' && define.amd) {
         define(factory);
@@ -30,7 +55,7 @@
             nullFormat: null,
             defaultFormat: '0,0',
             scalePercentBy100: true,
-            BigDecimalLib : Number
+            BigDecimalLib : ExtendedNumber
         },
         options = {
             currentLocale: defaults.currentLocale,
@@ -47,31 +72,36 @@
     ************************************/
 
     // Numeral prototype object
-    function Numeral(input, number) {
+    function Numeral(input, number, bigValue) {
         this._input = input;
 
         this._value = number;
 
-        this._bigValue = options.BigDecimalLib(input);
+        this._bigValue = bigValue;
     }
 
     numeral = function(input) {
         var value,
+            bigValue,
             kind,
             unformatFunction,
             regexp;
 
         if (numeral.isNumeral(input)) {
             value = input.value();
+            bigValue= input.bigValue();
         } else if (input === 0 || typeof input === 'undefined') {
             value = 0;
+            bigValue = new options.BigDecimalLib(0);
         } else if (input === null || _.isNaN(input)) {
             value = null;
         } else if (typeof input === 'string') {
             if (options.zeroFormat && input === options.zeroFormat) {
                 value = 0;
+                bigValue = new options.BigDecimalLib(0);
             } else if (options.nullFormat && input === options.nullFormat || !input.replace(/[^0-9]+/g, '').length) {
                 value = null;
+                bigValue = null;
             } else {
                 for (kind in formats) {
                     regexp = typeof formats[kind].regexps.unformat === 'function' ? formats[kind].regexps.unformat() : formats[kind].regexps.unformat;
@@ -85,13 +115,21 @@
 
                 unformatFunction = unformatFunction || numeral._.stringToNumber;
 
-                value = unformatFunction(input);
+                var unformatOutput = unformatFunction(input);
+                if(typeof unformatOutput==='object'){
+                    value = unformatOutput.value;
+                    bigValue = unformatOutput.bigValue;
+                }else {
+                    value = unformatOutput;
+                    bigValue = null;
+                }
             }
         } else {
             value = Number(input)|| null;
+            bigValue = new options.BigDecimalLib(input)|| null;
         }
 
-        return new Numeral(input, value);
+        return new Numeral(input, value, bigValue);
     };
 
     // version number
@@ -275,13 +313,16 @@
                 },
                 abbreviation,
                 value,
+                bigValue,
                 i,
                 regexp;
 
             if (options.zeroFormat && string === options.zeroFormat) {
                 value = 0;
+                bigValue= new options.BigDecimalLib(0);
             } else if (options.nullFormat && string === options.nullFormat || !string.replace(/[^0-9]+/g, '').length) {
                 value = null;
+                bigValue = null;
             } else {
                 value = 1;
 
@@ -304,10 +345,11 @@
                 // remove non numbers
                 string = string.replace(/[^0-9\.]+/g, '');
 
+                bigValue = (new options.BigDecimalLib(string)).multiply(new options.BigDecimalLib(''+value));
                 value *= Number(string);
             }
 
-            return value;
+            return {value:value, bigValue:bigValue};
         },
         isNaN: function(value) {
             return typeof value === 'number' && isNaN(value);
@@ -619,7 +661,7 @@
         },
         set: function(value) {
             this._value = Number(value);
-            this._bigValue = options.BigDecimalLib(value);
+            this._bigValue = new options.BigDecimalLib(value);
 
             return this;
         },
@@ -729,7 +771,12 @@
                 return output;
             },
             unformat: function(string) {
-                return +(numeral._.stringToNumber(string) * 0.0001).toFixed(15);
+                var values = numeral._.stringToNumber(string);
+
+                return{
+                    value : +(values.value * 0.0001).toFixed(15),
+                    bigValue : values.bigValue.multiply(new numeral.options.BigDecimalLib('0.0001'))
+                };
             }
         });
 })();
@@ -788,9 +835,12 @@
             return output + suffix;
         },
         unformat: function(string) {
-            var value = numeral._.stringToNumber(string),
+            var numValue = numeral._.stringToNumber(string),
                 power,
                 bytesMultiplier;
+
+            var value = numValue.value,
+                bigValue = numValue.bigValue;
 
             if (value) {
                 for (power = decimal.suffixes.length - 1; power >= 0; power--) {
@@ -810,7 +860,30 @@
                 value *= (bytesMultiplier || 1);
             }
 
-            return value;
+            if (bigValue) {
+                for (power = decimal.suffixes.length - 1; power >= 0; power--) {
+                    if (numeral._.includes(string, decimal.suffixes[power])) {
+                        bytesMultiplier = Math.pow(decimal.base, power);
+
+                        break;
+                    }
+
+                    if (numeral._.includes(string, binary.suffixes[power])) {
+                        bytesMultiplier = Math.pow(binary.base, power);
+
+                        break;
+                    }
+                }
+
+                if(!bytesMultiplier) {
+                    bytesMultiplier = 1;
+                }
+
+                bigValue = bigValue.multiply(new numeral.options.BigDecimalLib(''+bytesMultiplier));
+            }
+
+
+            return {value:value,bigValue:bigValue};
         }
     });
 })();
@@ -910,7 +983,12 @@
                 return num;
             }
 
-            return numeral._.reduce([value, Math.pow(10, power)], cback, 1);
+            var bigVal = new numeral.options.BigDecimalLib(parts[0]);
+
+            return {
+                value : numeral._.reduce([value, Math.pow(10, power)], cback, 1),
+                bigValue : bigVal.pow(power)
+            } ;
         }
     });
 })();
@@ -971,11 +1049,16 @@
             return output;
         },
         unformat: function(string) {
-            var number = numeral._.stringToNumber(string);
+            var numValue = numeral._.stringToNumber(string);
+
+            var number = numValue.value,
+                bigValue = numValue.bigValue;
+
             if (numeral.options.scalePercentBy100) {
-                return number * 0.01;
+                number = number * 0.01;
+                bigValue = bigValue.multiply(new numeral.options.BigDecimalLib('0.01'));
             }
-            return number;
+            return {value:number,bigValue:bigValue};
         }
     });
 })();
@@ -996,23 +1079,31 @@
         },
         unformat: function(string) {
             var timeArray = string.split(':'),
-                seconds = 0;
+                seconds = 0,
+                bigSecs = new numeral.options.BigDecimalLib(0);
+
+            var big60 = new numeral.options.BigDecimalLib(60);
 
             // turn hours and minutes into seconds and add them all up
             if (timeArray.length === 3) {
                 // hours
                 seconds = seconds + (Number(timeArray[0]) * 60 * 60);
+                bigSecs = bigSecs.add((new numeral.options.BigDecimalLib(timeArray[0])).multiply(big60).multiply(big60));
                 // minutes
                 seconds = seconds + (Number(timeArray[1]) * 60);
+                bigSecs = bigSecs.add((new numeral.options.BigDecimalLib(timeArray[1])).multiply(big60));
                 // seconds
                 seconds = seconds + Number(timeArray[2]);
+                bigSecs = bigSecs.add(new numeral.options.BigDecimalLib(timeArray[2]));
             } else if (timeArray.length === 2) {
                 // minutes
                 seconds = seconds + (Number(timeArray[0]) * 60);
+                bigSecs = bigSecs.add((new numeral.options.BigDecimalLib(timeArray[0])).multiply(big60));
                 // seconds
                 seconds = seconds + Number(timeArray[1]);
+                bigSecs = bigSecs.add(new numeral.options.BigDecimalLib(timeArray[1]));
             }
-            return Number(seconds);
+            return {value : Number(seconds), bigValue:bigSecs};
         }
     });
 })();

@@ -40,7 +40,7 @@
                 return num;
             }
 
-            const bigVal = numeral.options.BigDecimalLib(parts[0]);
+            var bigVal = new numeral.options.BigDecimalLib(parts[0]);
 
             return {
                 value : numeral._.reduce([value, Math.pow(10, power)], cback, 1),

@@ -63,9 +63,12 @@
             return output + suffix;
         },
         unformat: function(string) {
-            let {value,bigValue} = numeral._.stringToNumber(string),
+            var numValue = numeral._.stringToNumber(string),
                 power,
                 bytesMultiplier;
+
+            var value = numValue.value,
+                bigValue = numValue.bigValue;
 
             if (value) {
                 for (power = decimal.suffixes.length - 1; power >= 0; power--) {
@@ -100,13 +103,15 @@
                     }
                 }
 
-                if(!bytesMultiplier) bytesMultiplier = 1;
+                if(!bytesMultiplier) {
+                    bytesMultiplier = 1;
+                }
 
-                bigValue = bigValue.multiply(numeral.options.BigDecimalLib(""+bytesMultiplier));
+                bigValue = bigValue.multiply(new numeral.options.BigDecimalLib(''+bytesMultiplier));
             }
 
 
-            return {value,bigValue};
+            return {value:value,bigValue:bigValue};
         }
     });
 }));

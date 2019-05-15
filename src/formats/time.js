@@ -26,28 +26,28 @@
         unformat: function(string) {
             var timeArray = string.split(':'),
                 seconds = 0,
-                bigSecs = numeral.options.BigDecimalLib(0);
+                bigSecs = new numeral.options.BigDecimalLib(0);
 
-            var big60 = numeral.options.BigDecimalLib(60);
+            var big60 = new numeral.options.BigDecimalLib(60);
 
             // turn hours and minutes into seconds and add them all up
             if (timeArray.length === 3) {
                 // hours
                 seconds = seconds + (Number(timeArray[0]) * 60 * 60);
-                bigSecs = bigSecs.add(numeral.options.BigDecimalLib(timeArray[0]).multiply(big60).multiply(big60));
+                bigSecs = bigSecs.add((new numeral.options.BigDecimalLib(timeArray[0])).multiply(big60).multiply(big60));
                 // minutes
                 seconds = seconds + (Number(timeArray[1]) * 60);
-                bigSecs = bigSecs.add(numeral.options.BigDecimalLib(timeArray[1]).multiply(big60));
+                bigSecs = bigSecs.add((new numeral.options.BigDecimalLib(timeArray[1])).multiply(big60));
                 // seconds
                 seconds = seconds + Number(timeArray[2]);
-                bigSecs = bigSecs.add(numeral.options.BigDecimalLib(timeArray[2]));
+                bigSecs = bigSecs.add(new numeral.options.BigDecimalLib(timeArray[2]));
             } else if (timeArray.length === 2) {
                 // minutes
                 seconds = seconds + (Number(timeArray[0]) * 60);
-                bigSecs = bigSecs.add(numeral.options.BigDecimalLib(timeArray[0]).multiply(big60));
+                bigSecs = bigSecs.add((new numeral.options.BigDecimalLib(timeArray[0])).multiply(big60));
                 // seconds
                 seconds = seconds + Number(timeArray[1]);
-                bigSecs = bigSecs.add(numeral.options.BigDecimalLib(timeArray[1]));
+                bigSecs = bigSecs.add(new numeral.options.BigDecimalLib(timeArray[1]));
             }
             return {value : Number(seconds), bigValue:bigSecs};
         }

@@ -45,7 +45,7 @@
 
                 return{
                     value : +(values.value * 0.0001).toFixed(15),
-                    bigValue : values.bigValue.multiply(numeral.options.BigDecimalLib("0.0001"))
+                    bigValue : values.bigValue.multiply(new numeral.options.BigDecimalLib('0.0001'))
                 };
             }
         });

@@ -42,12 +42,16 @@
             return output;
         },
         unformat: function(string) {
-            var {value:number,bigValue} = numeral._.stringToNumber(string);
+            var numValue = numeral._.stringToNumber(string);
+
+            var number = numValue.value,
+                bigValue = numValue.bigValue;
+
             if (numeral.options.scalePercentBy100) {
                 number = number * 0.01;
-                bigValue = bigValue.multiply(numeral.options.BigDecimalLib("0.01"));
+                bigValue = bigValue.multiply(new numeral.options.BigDecimalLib('0.01'));
             }
-            return {value:number,bigValue};
+            return {value:number,bigValue:bigValue};
         }
     });
 }));
